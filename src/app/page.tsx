@@ -1,113 +1,211 @@
-import Image from "next/image";
+"use client";
+
+import { Dispatch, SetStateAction, useState } from "react";
+
+const TrackerHomeInfo = ({ current }: { current: Date }) => {
+  const income = getIncome();
+  const expense = getExpense();
+
+  return (
+    <div className="flex gap-3 px-6">
+      <span className="flex gap-1">
+        <span className="text-bold text-emerald-900">수입</span>
+        <span>{income}원</span>
+      </span>
+      <span className="flex gap-1">
+        <span className="text-bold text-red-800">지출</span>
+        <span>{expense}원</span>
+      </span>
+      <span className="flex gap-1">
+        <span className="text-bold text-blue-800">전체</span>
+        <span>{income - expense}원</span>
+      </span>
+    </div>
+  );
+};
+
+const TrackerHomeMonth = ({
+  current,
+  setCurrent,
+}: {
+  current: Date;
+  setCurrent: Dispatch<SetStateAction<Date>>;
+}) => {
+  const [year, month] = getYearMonth(current);
+  const [prevYear, prevMonth] = getYearMonth(
+    new Date(current.getFullYear(), current.getMonth() - 1)
+  );
+  const [nextYear, nextMonth] = getYearMonth(
+    new Date(current.getFullYear(), current.getMonth() + 1)
+  );
+  return (
+    <div className="flex gap-1 px-6 items-baseline">
+      <h2 className="text-lg">{prevMonth}월</h2>
+      <h2 className="text-[24px] bold">{month}월</h2>
+      <h2 className="text-lg">{nextMonth}월</h2>
+    </div>
+  );
+};
+
+enum CATEGORY_TYPE {
+  FOOD = "식비",
+  TRANSPORTATION = "교통비",
+  CULTURE = "문화생활",
+  SHOPPING = "쇼핑",
+  ETC = "기타",
+}
+
+type ExpenseItemType = {
+  id: string;
+  date: Date;
+  title: string;
+  category: CATEGORY_TYPE;
+  amount: number;
+  income: boolean;
+};
+
+function getItems() {
+  return [
+    {
+      id: "1",
+      date: new Date(),
+      title: "커피",
+      category: CATEGORY_TYPE.FOOD,
+      amount: 3000,
+      income: false,
+    },
+    {
+      id: "2",
+      date: new Date(),
+      title: "점심",
+      category: CATEGORY_TYPE.FOOD,
+      amount: 7000,
+      income: false,
+    },
+    {
+      id: "3",
+      date: new Date(),
+      title: "택시",
+      category: CATEGORY_TYPE.TRANSPORTATION,
+      amount: 5000,
+      income: false,
+    },
+    {
+      id: "4",
+      date: new Date(),
+      title: "책",
+      category: CATEGORY_TYPE.CULTURE,
+      amount: 15000,
+      income: false,
+    },
+    {
+      id: "5",
+      date: new Date(),
+      title: "월급",
+      category: CATEGORY_TYPE.SHOPPING,
+      amount: 700000,
+      income: true,
+    },
+  ];
+}
+
+const ExpenseItem = (props: ExpenseItemType) => {
+  const prettyDate = props.date.toISOString().split("T")[0];
+  return (
+    <div className="flex gap-4 p-2 items-center hover:bg-gray-200 transition-colors text-sm">
+      <span className="font-semibold col-span-1 w-[120px]">{prettyDate}</span>
+      <span className="text-blue-600 overflow-hidden overflow-ellipsis whitespace-nowrap col-span-2 w-[240px]">
+        {props.title}
+      </span>
+      <span
+        className={
+          `font-semibold col-span-1 w-[120px]` +
+          (props.income ? " text-green-600" : " text-red-600")
+        }
+      >
+        {props.amount}원
+      </span>
+      <span className="capitalize col-span-1 w-[120px]">{props.category}</span>
+    </div>
+  );
+};
+
+const TrackerItems = () => {
+  const items = getItems();
+  return (
+    <div className="flex flex-col gap-y-2 p-4 bg-white rounded-xl shadow-lg">
+      {items.map((item) => (
+        <ExpenseItem key={item.id} {...item} />
+      ))}
+      <TrackerItemInput />
+    </div>
+  );
+};
+
+const TrackerItemInput = () => {
+  const [date, setDate] = useState<Date>(new Date());
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    const date = new Date(dateValue);
+    setDate(date); // Set date in state
+  };
+
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = `0${date.getMonth() + 1}`.slice(-2);
+    const day = `0${date.getDate()}`.slice(-2);
+    return `${year}-${month}-${day}`;
+  };
+
+  return (
+    <form className="flex gap-4 p-2 items-center hover:bg-gray-200 transition-colors text-sm">
+      <span className="font-semibold col-span-1 w-[120px] relative">
+        {formatDate(date)}
+        <input
+          type="date"
+          onChange={handleDateChange}
+          className="absolute w-full left-0 cursor-pointer z-10 h-full top-0"
+        />
+      </span>
+      <input
+        type="text"
+        className="text-blue-600 overflow-hidden overflow-ellipsis whitespace-nowrap col-span-2 w-[240px] border"
+      />
+      <input
+        type="number"
+        className="font-semibold col-span-1 w-[120px] border"
+      />
+      <select className="capitalize col-span-1 w-[120px]">
+        <option value="식비">식비</option>
+        <option value="교통비">교통비</option>
+        <option value="문화생활">문화생활</option>
+        <option value="쇼핑">쇼핑</option>
+        <option value="기타">기타</option>
+      </select>
+    </form>
+  );
+};
+
+function getYearMonth(current: Date) {
+  return [current.getFullYear(), current.getMonth() + 1];
+}
+
+function getIncome() {
+  return 1000000;
+}
+
+function getExpense() {
+  return 500000;
+}
 
 export default function Home() {
+  const [current, setCurrent] = useState<Date>(new Date());
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+    <main className="flex flex-col gap-y-2">
+      <TrackerHomeMonth current={current} setCurrent={setCurrent} />
+      <TrackerHomeInfo current={current} />
+      <TrackerItems />
     </main>
   );
 }

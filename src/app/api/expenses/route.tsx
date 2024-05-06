@@ -1,5 +1,3 @@
-import { NextApiRequest } from "next";
-
 import prisma from "@/prisma/prisma";
 import { revalidateTag } from "next/cache";
 import { NextRequest } from "next/server";
@@ -8,7 +6,6 @@ export async function GET(req: NextRequest) {
   const year = req.nextUrl.searchParams.get("year");
   const month = req.nextUrl.searchParams.get("month");
 
-  console.log(year, month);
   const result = await prisma.expense.findMany({
     where: {
       date: {
@@ -18,7 +15,6 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  console.log(result);
   return Response.json(result);
 }
 
